@@ -110,8 +110,17 @@ class ProvedorLLMService:
                 headers["Authorization"] = f"Bearer {provedor.api_key}"
             
             async with httpx.AsyncClient(timeout=10.0) as client:
+                # Normalizar base_url removendo endpoints específicos
+                base_url = str(provedor.base_url).rstrip('/')
+                # Remover endpoints comuns que podem estar no base_url
+                endpoints_to_remove = ['/v1/models', '/v1/chat/completions', '/api/tags', '/api/chat', '/v1']
+                for endpoint in endpoints_to_remove:
+                    if base_url.endswith(endpoint):
+                        base_url = base_url[:-len(endpoint)]
+                        break
+                
                 response = await client.get(
-                    f"{provedor.base_url}/v1/models",
+                    f"{base_url}/v1/models",
                     headers=headers
                 )
                 response.raise_for_status()
@@ -144,8 +153,15 @@ class ProvedorLLMService:
         
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                # Construir URL base
+                # Construir URL base - remover endpoints específicos
                 base_url = str(provedor.base_url).rstrip('/')
+                # Remover endpoints comuns que podem estar no base_url
+                endpoints_to_remove = ['/v1/models', '/v1/chat/completions', '/api/tags', '/api/chat', '/v1']
+                for endpoint in endpoints_to_remove:
+                    if base_url.endswith(endpoint):
+                        base_url = base_url[:-len(endpoint)]
+                        break
+                
                 headers = {"Content-Type": "application/json"}
                 if provedor.api_key:
                     headers["Authorization"] = f"Bearer {provedor.api_key}"
@@ -300,7 +316,15 @@ class ProvedorLLMService:
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
+                # Normalizar base_url removendo endpoints específicos
                 base_url = str(provedor.base_url).rstrip('/')
+                # Remover endpoints comuns que podem estar no base_url
+                endpoints_to_remove = ['/v1/models', '/v1/chat/completions', '/api/tags', '/api/chat', '/v1']
+                for endpoint in endpoints_to_remove:
+                    if base_url.endswith(endpoint):
+                        base_url = base_url[:-len(endpoint)]
+                        break
+                
                 headers = {"Content-Type": "application/json"}
                 if provedor.api_key:
                     headers["Authorization"] = f"Bearer {provedor.api_key}"
