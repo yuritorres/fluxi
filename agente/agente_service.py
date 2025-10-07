@@ -299,10 +299,25 @@ class AgenteService:
             if agente is None:
                 raise ValueError("Nenhum agente ativo configurado para esta sessão")
         
-        # Obter modelo (do agente, ou padrão)
-        modelo = agente.modelo_llm or ConfiguracaoService.obter_valor(
-            db, "openrouter_modelo_padrao", "google/gemini-2.0-flash-001"
-        )
+        # Obter modelo (do agente, ou padrão do provedor configurado)
+        modelo = agente.modelo_llm
+        if not modelo:
+            # Tentar obter modelo do provedor local configurado
+            provedor_padrao = ConfiguracaoService.obter_valor(db, "llm_provedor_padrao")
+            if provedor_padrao == "local":
+                provedor_local_id = ConfiguracaoService.obter_valor(db, "llm_provedor_local_id")
+                if provedor_local_id:
+                    from llm_providers.llm_providers_service import ProvedorLLMService
+                    modelos = ProvedorLLMService.obter_modelos(db, provedor_local_id)
+                    if modelos:
+                        modelo = modelos[0].modelo_id
+                        print(f"📋 [AGENTE] Usando modelo do provedor local: {modelo}")
+            
+            # Fallback para OpenRouter se não houver provedor local
+            if not modelo:
+                modelo = ConfiguracaoService.obter_valor(
+                    db, "openrouter_modelo_padrao", "google/gemini-2.0-flash-001"
+                )
         
         # Obter parâmetros (do agente, ou padrão)
         temperatura = float(agente.temperatura or ConfiguracaoService.obter_valor(

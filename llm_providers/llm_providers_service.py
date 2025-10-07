@@ -232,6 +232,15 @@ class ProvedorLLMService:
 
                     # Salvar/cachear modelos
                     ProvedorLLMService._salvar_modelos(db, provedor_id, modelos)
+                    
+                    # Configurar como provedor padrão se for o primeiro ativo
+                    from config.config_service import ConfiguracaoService
+                    provedor_padrao_atual = ConfiguracaoService.obter_valor(db, "llm_provedor_padrao")
+                    if not provedor_padrao_atual or provedor_padrao_atual == "openrouter":
+                        # Se não há provedor configurado ou está usando OpenRouter, usar este provedor local
+                        ConfiguracaoService.definir_valor(db, "llm_provedor_padrao", "local")
+                        ConfiguracaoService.definir_valor(db, "llm_provedor_local_id", provedor_id)
+                        print(f"✅ Provedor {provedor.nome} configurado como padrão do sistema")
 
                     return TesteConexaoResposta(
                         sucesso=True,
